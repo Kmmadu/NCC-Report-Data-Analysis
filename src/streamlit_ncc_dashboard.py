@@ -8,7 +8,7 @@ from functools import reduce
 # -------------------------------------------------------------------
 @st.cache_data
 def load_data():
-    file_path = "../data/merged_clients.csv"  # Ensure the merged CSV is in the data folder
+    file_path = "C:/Users/Kmmadu/NCC-Report-Data-Analysis/data/merged_clients.csv"  # Ensure the merged CSV is in the data folder
     try:
         df = pd.read_csv(file_path)
         
