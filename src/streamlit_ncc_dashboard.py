@@ -2,24 +2,34 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from functools import reduce
+import os
 
 # -------------------------------------------------------------------
 # Load and Preprocess Data
 # -------------------------------------------------------------------
 @st.cache_data
 def load_data():
-    file_path = "../data/merged_clients.csv"  # Ensure the merged CSV is in the data folder
     try:
+        # Get current script directory
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Build absolute path to data file
+        file_path = os.path.join(current_dir, 'data', 'merged_clients.csv')
+        
+        # Verify file exists before loading
+        if not os.path.exists(file_path):
+            st.error(f"Data file not found at: {file_path}")
+            st.stop()
+            
         df = pd.read_csv(file_path)
         
-        # Standardize client types for consistency
+        # Standardize client types
         df["CLIENT"] = df["CLIENT"].replace({
             "Corporate and Retail": "Corporate",
             "Retail Clients": "Retail",
             "corporate": "Corporate"
         }).str.strip().str.title()
         
-        # Standardize customer statuses for consistency
+        # Standardize customer statuses
         df["CUSTOMER STATUS"] = df["CUSTOMER STATUS"].replace({
             "Active": "Connected",
             "Inactive": "Disconnected",
@@ -31,14 +41,24 @@ def load_data():
         st.error(f"Error loading data: {str(e)}")
         st.stop()
 
+# -------------------------------------------------------------------
+# PDF Path Handling
+# -------------------------------------------------------------------
+def get_pdf_path():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(current_dir, 'data', 'insight.pdf')
+
+# -------------------------------------------------------------------
+# Load Data
+# -------------------------------------------------------------------
 df = load_data()
 
 # -------------------------------------------------------------------
-# Sidebar Configuration - Data Filters
+# Sidebar Configuration - Filters
 # -------------------------------------------------------------------
 st.sidebar.header("Data Controls")
 
-# Geographic Filters: Regions and States
+# Geographic Filters
 with st.sidebar.expander("🌍 Geographic Filters", expanded=True):
     regions = st.multiselect(
         "Select Regions:",
@@ -54,7 +74,7 @@ with st.sidebar.expander("🌍 Geographic Filters", expanded=True):
         help="Filter data by states within the selected regions."
     )
 
-# Customer Filters: Client Type and Connection Status
+# Customer Filters
 with st.sidebar.expander("🏢 Customer Filters", expanded=True):
     client_types = st.multiselect(
         "Select Customer Types:",
@@ -70,17 +90,13 @@ with st.sidebar.expander("🏢 Customer Filters", expanded=True):
     )
 
 # -------------------------------------------------------------------
-# Filtering Logic - Apply Selected Filters
+# Filtering Logic
 # -------------------------------------------------------------------
 conditions = []
-if regions:
-    conditions.append(df["REGION"].isin(regions))
-if states:
-    conditions.append(df["STATE"].isin(states))
-if client_types:
-    conditions.append(df["CLIENT"].isin(client_types))
-if statuses:
-    conditions.append(df["CUSTOMER STATUS"].isin(statuses))
+if regions: conditions.append(df["REGION"].isin(regions))
+if states: conditions.append(df["STATE"].isin(states))
+if client_types: conditions.append(df["CLIENT"].isin(client_types))
+if statuses: conditions.append(df["CUSTOMER STATUS"].isin(statuses))
 
 df_filtered = df[reduce(lambda x, y: x & y, conditions)] if conditions else df
 
@@ -89,40 +105,24 @@ if df_filtered.empty:
     st.stop()
 
 # -------------------------------------------------------------------
-# Dashboard Layout - Title and Key Metrics
+# Dashboard Layout
 # -------------------------------------------------------------------
 st.title("NCC 2024 Customer Intelligence Dashboard")
 st.caption("Q4 Performance Metrics & Customer Insights")
 
-# Display key metrics in a 3-column grid
+# Key Metrics
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric(
-        "Total Bandwidth",
-        f"{df_filtered['BANDWIDTH SUBSCRIPTION (Mbps)'].sum():,.0f} Mbps",
-        help="Total bandwidth allocated to selected customers."
-    )
+    st.metric("Total Bandwidth", f"{df_filtered['BANDWIDTH SUBSCRIPTION (Mbps)'].sum():,.0f} Mbps")
 with col2:
-    st.metric(
-        "Active Connections",
-        f"{df_filtered[df_filtered['CUSTOMER STATUS'] == 'Connected'].shape[0]:,}",
-        help="Number of currently connected customers."
-    )
+    st.metric("Active Connections", f"{df_filtered[df_filtered['CUSTOMER STATUS'] == 'Connected'].shape[0]:,}")
 with col3:
-    st.metric(
-        "Enterprise Clients",
-        f"{df_filtered[df_filtered['CLIENT'] == 'Corporate'].shape[0]:,}",
-        help="Number of corporate clients."
-    )
+    st.metric("Enterprise Clients", f"{df_filtered[df_filtered['CLIENT'] == 'Corporate'].shape[0]:,}")
 
-# -------------------------------------------------------------------
-# Visualization Section - Tabs for Different Analysis Views
-# -------------------------------------------------------------------
+# Visualizations
 tab1, tab2, tab3 = st.tabs(["Geographic Analysis", "Customer Segmentation", "Raw Data"])
 
-# Geographic Analysis Tab
 with tab1:
-    # Bar chart: Customer Distribution by Region
     fig1 = px.bar(
         df_filtered.groupby("REGION", as_index=False).size(),
         x="REGION", y="size",
@@ -132,7 +132,6 @@ with tab1:
     fig1.update_layout(height=400, title_x=0.5)
     st.plotly_chart(fig1, use_container_width=True)
     
-    # Bar chart: Top 10 States with Most Customers
     fig2 = px.bar(
         df_filtered.groupby("STATE", as_index=False).size().nlargest(10, "size"),
         x="size", y="STATE", orientation='h',
@@ -143,9 +142,7 @@ with tab1:
     fig2.update_layout(title_x=0.5)
     st.plotly_chart(fig2, use_container_width=True)
 
-# Customer Segmentation Tab
 with tab2:
-    # Pie chart: Customer Status Distribution with custom colors
     fig3 = px.pie(
         df_filtered,
         names="CUSTOMER STATUS",
@@ -157,7 +154,6 @@ with tab2:
     fig3.update_layout(title_x=0.5)
     st.plotly_chart(fig3, use_container_width=True)
     
-    # Treemap: Bandwidth Allocation by Region & Client Type
     fig4 = px.treemap(
         df_filtered,
         path=["REGION", "CLIENT"],
@@ -166,7 +162,6 @@ with tab2:
     )
     st.plotly_chart(fig4, use_container_width=True)
 
-# Raw Data Tab - Interactive Data Editor
 with tab3:
     st.subheader("Filtered Customer Data")
     bandwidth_max = int(df_filtered["BANDWIDTH SUBSCRIPTION (Mbps)"].max())
@@ -184,12 +179,12 @@ with tab3:
     )
 
 # -------------------------------------------------------------------
-# Data Export Section (Sidebar)
+# Data Export Section
 # -------------------------------------------------------------------
 st.sidebar.markdown("---")
 st.sidebar.subheader("Data Export")
 
-# Download filtered data as CSV
+# CSV Downloads
 st.sidebar.download_button(
     label="📥 Export Filtered Data",
     data=df_filtered.to_csv(index=False),
@@ -198,7 +193,6 @@ st.sidebar.download_button(
     help="Download currently filtered dataset as CSV"
 )
 
-# Download full dataset as CSV
 st.sidebar.download_button(
     label="📥 Full Dataset Export",
     data=df.to_csv(index=False),
@@ -207,15 +201,19 @@ st.sidebar.download_button(
     help="Download complete dataset as CSV"
 )
 
-# PDF Report Download (Insights Report)
+# PDF Download
 try:
-    with open("../data/insight.pdf", "rb") as pdf_file:
-        st.sidebar.download_button(
-            label="📄 Download Insights Report",
-            data=pdf_file,
-            file_name="ncc_insights_report.pdf",
-            mime="application/pdf",
-            help="Download comprehensive insights report (PDF)"
-        )
-except FileNotFoundError:
-    st.sidebar.error("Insights report not found. Ensure 'insight.pdf' exists in the data folder.")
+    pdf_path = get_pdf_path()
+    if os.path.exists(pdf_path):
+        with open(pdf_path, "rb") as pdf_file:
+            st.sidebar.download_button(
+                label="📄 Download Insights Report",
+                data=pdf_file,
+                file_name="ncc_insights_report.pdf",
+                mime="application/pdf",
+                help="Download comprehensive insights report (PDF)"
+            )
+    else:
+        st.sidebar.error(f"PDF report not found at: {pdf_path}")
+except Exception as e:
+    st.sidebar.error(f"Error loading PDF: {str(e)}")
