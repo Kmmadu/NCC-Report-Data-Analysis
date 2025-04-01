@@ -236,11 +236,11 @@ st.sidebar.download_button(
     help="Download complete dataset as CSV"
 )
 
-# PDF Report Download - Corrected Path Handling
+# PDF Report Download - Fixed Path
 def get_pdf_path():
-    """Returns the absolute path of the PDF file."""
-    base_dir = os.getcwd()  # Gets current working directory
-    pdf_path = os.path.join(base_dir, "data", "insight.pdf")
+    """Returns the correct path to the PDF file."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # Gets the script's actual directory
+    pdf_path = os.path.join(base_dir, "data", "insight.pdf")  # Adjust path based on actual repo structure
     return pdf_path
 
 try:
