@@ -236,20 +236,25 @@ st.sidebar.download_button(
     help="Download complete dataset as CSV"
 )
 
-# PDF Report Download - Fixed Path
 def get_pdf_path():
-    """Returns the correct path to the PDF file."""
-    base_dir = os.path.dirname(os.path.abspath(__file__))  # Gets the script's actual directory
-    pdf_path = os.path.join(base_dir, "data", "insight.pdf")  # Adjust path based on actual repo structure
+    """
+    Returns the absolute path to the PDF file located in the data folder
+    at the repository root.
+    """
+    # Get the current script directory (inside src)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Go up one level to reach the repo root, then enter the data folder
+    repo_root = os.path.abspath(os.path.join(current_dir, ".."))
+    pdf_path = os.path.join(repo_root, "data", "insight.pdf")
     return pdf_path
 
 try:
     pdf_path = get_pdf_path()
-
+    
     # Debugging information
     st.sidebar.markdown(f"**Expected PDF path:**  \n`{pdf_path}`")
-
-    if os.path.exists(pdf_path):  # Checks if file exists
+    
+    if os.path.exists(pdf_path):
         with open(pdf_path, "rb") as pdf_file:
             st.sidebar.download_button(
                 label="📄 Download Insights Report",
@@ -260,8 +265,6 @@ try:
             )
     else:
         st.sidebar.error(f"⚠️ PDF report not found at: {pdf_path}")
-        st.sidebar.markdown("**Ensure the file exists in:**")
-        st.sidebar.code("data/insight.pdf")
-
+        st.sidebar.markdown("**Ensure the file exists in the 'data' folder at the repository root.**")
 except Exception as e:
     st.sidebar.error(f"❌ Error loading PDF: {str(e)}")
