@@ -235,3 +235,13 @@ st.sidebar.download_button(
     mime="text/csv",
     help="Download complete dataset as CSV"
 )
+# Download Insights PDF
+with open("data/Insight.pdf", "rb") as f:
+    pdf_bytes = f.read()
+
+st.sidebar.download_button(
+    label="Download Insights (PDF)",
+    data=pdf_bytes,
+    file_name="Insights.pdf",
+    mime="application/pdf",
+)
