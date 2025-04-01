@@ -1,121 +1,91 @@
 import pandas as pd
-from fpdf import FPDF
 
-# -----------------------------
-# Data Loading and Preprocessing
-# -----------------------------
-def load_merged_data(file_path):
+def clean_df(df):
     """
-    Load and preprocess the merged client dataset.
-
+    Clean the provided DataFrame by removing rows that are completely empty 
+    and resetting the index.
+    
     Parameters:
-        file_path (str): Path to the merged_clients.csv file.
-
+        df (pd.DataFrame): The DataFrame to clean.
+    
     Returns:
-        pd.DataFrame: The loaded DataFrame with bandwidth values converted to numeric.
+        pd.DataFrame: The cleaned DataFrame.
     """
-    df = pd.read_csv(file_path)
-    # Convert the 'BANDWIDTH SUBSCRIPTION (Mbps)' column to numeric.
-    df["BANDWIDTH SUBSCRIPTION (Mbps)"] = pd.to_numeric(df["BANDWIDTH SUBSCRIPTION (Mbps)"], errors="coerce")
+    df = df.dropna(how='all')  # Remove rows that are completely empty.
+    df = df.reset_index(drop=True)  # Reset the index for a clean DataFrame.
     return df
 
-# Load the merged data file.
-file_path = "data/merged_clients.csv"  # Update the path if necessary
-df = load_merged_data(file_path)
+def process_excel_tables(file_path, sheet_name, header_marker="S/N"):
+    """
+    Process an Excel sheet containing two tables separated by a repeated header row.
+    Extracts both tables, cleans them, and merges them.
 
-# -----------------------------
-# Calculate Insights
-# -----------------------------
-# 1. Total Bandwidth allocated by Network Type
-bandwidth_by_network = df.groupby("WAN/INTERNET CLIENT")["BANDWIDTH SUBSCRIPTION (Mbps)"].sum()
-bandwidth_by_network_dict = bandwidth_by_network.to_dict()
-
-# 2. Total Bandwidth allocated to Corporate Clients
-corporate_bandwidth = df[df["CLIENT"].str.strip() == "Corporate"]["BANDWIDTH SUBSCRIPTION (Mbps)"].sum()
-
-# 3. Total Bandwidth allocated to Retail Clients
-retail_bandwidth = df[df["CLIENT"].str.strip() == "Retail"]["BANDWIDTH SUBSCRIPTION (Mbps)"].sum()
-
-# 4. Total Bandwidth consumed per Region
-bandwidth_by_region = df.groupby("REGION")["BANDWIDTH SUBSCRIPTION (Mbps)"].sum()
-
-# 5. Average Bandwidth per Client
-avg_bandwidth = df["BANDWIDTH SUBSCRIPTION (Mbps)"].mean()
-
-# 6. Top 5 States with Highest Bandwidth Allocation
-bandwidth_by_state = df.groupby("STATE")["BANDWIDTH SUBSCRIPTION (Mbps)"].sum().nlargest(5)
-
-# 7. Active vs. Inactive Bandwidth Consumption (Optional)
-active_bandwidth = df[df["CUSTOMER STATUS"].str.strip() == "Connected"]["BANDWIDTH SUBSCRIPTION (Mbps)"].sum()
-inactive_bandwidth = df[df["CUSTOMER STATUS"].str.strip() == "Disconnected"]["BANDWIDTH SUBSCRIPTION (Mbps)"].sum()
-
-# -----------------------------
-# Generate PDF Report using FPDF
-# -----------------------------
-class InsightsPDF(FPDF):
-    def header(self):
-        """
-        Create a header for each page of the PDF.
-        """
-        self.set_font("Helvetica", "B", 16)
-        self.cell(0, 10, "NCC Report - Bandwidth Insights", ln=True, align="C")
-        self.ln(5)
+    Parameters:
+        file_path (str): Path to the Excel file.
+        sheet_name (str): Name of the sheet containing the tables.
+        header_marker (str): Marker used to identify header rows (default is "S/N").
+    
+    Returns:
+        pd.DataFrame: A merged DataFrame containing data from both tables.
+    
+    Raises:
+        ValueError: If the expected header rows are not found or if one of the tables is empty.
+    """
+    try:
+        # Read the entire sheet without assuming a header
+        df_all = pd.read_excel(file_path, sheet_name=sheet_name, header=None)
         
-    def add_section(self, title, content):
-        """
-        Add a section with a title and corresponding content.
+        # Identify header rows by searching for the header marker in the first column.
+        header_rows = df_all.index[df_all.iloc[:, 0].astype(str).str.strip() == header_marker].tolist()
+        
+        if len(header_rows) < 2:
+            raise ValueError(f"Could not find two header rows with marker '{header_marker}'. Found {len(header_rows)} header row(s).")
+        
+        # Extract header values from the first header row.
+        header = df_all.iloc[header_rows[0]].tolist()
+        
+        # Extract the first table
+        df1 = df_all.iloc[header_rows[0] + 1 : header_rows[1]].copy()
+        df1.columns = header  # Set header for the first table.
+        df1 = clean_df(df1)
+        
+        # Extract the second table
+        df2 = df_all.iloc[header_rows[1] + 1 :].copy()
+        df2.columns = header  # Set header for the second table.
+        df2 = clean_df(df2)
+        
+        # Validate that both tables have data
+        if df1.empty or df2.empty:
+            raise ValueError("One or both extracted tables are empty.")
+            
+        # Merge the two DataFrames into one
+        merged_df = pd.concat([df1, df2], ignore_index=True)
+        
+        # If a column "S/N" exists, reset it to be sequential
+        if "S/N" in merged_df.columns:
+            merged_df["S/N"] = range(1, len(merged_df) + 1)
+            
+        return merged_df
+        
+    except Exception as e:
+        print(f"Error processing file: {str(e)}")
+        raise
 
-        Parameters:
-            title (str): Section title.
-            content (str): Section content.
-        """
-        self.set_font("Helvetica", "B", 14)
-        self.cell(0, 10, title, ln=True)
-        self.ln(2)
-        self.set_font("Helvetica", "", 12)
-        self.multi_cell(0, 8, content)
-        self.ln(5)
-
-# Prepare content for the PDF report.
-report_content = ""
-
-# Insight 1: Bandwidth by Network Type
-report_content += "Total Bandwidth allocated by Network Type:\n"
-for network, bandwidth in bandwidth_by_network_dict.items():
-    report_content += f"  {network}: {bandwidth} Mbps\n"
-report_content += "\n"
-
-# Insight 2: Bandwidth for Corporate vs Retail Clients
-report_content += f"Total Bandwidth allocated to Corporate Clients: {corporate_bandwidth} Mbps\n"
-report_content += f"Total Bandwidth allocated to Retail Clients: {retail_bandwidth} Mbps\n\n"
-
-# Insight 3: Bandwidth by Region
-report_content += "Total Bandwidth consumed per Region:\n"
-for region, bandwidth in bandwidth_by_region.items():
-    report_content += f"  {region}: {bandwidth} Mbps\n"
-report_content += "\n"
-
-# Insight 4: Average Bandwidth per Client
-report_content += f"Average Bandwidth per Client: {avg_bandwidth:.2f} Mbps\n\n"
-
-# Insight 5: Top 5 States with Highest Bandwidth Allocation
-report_content += "Top 5 States with Highest Bandwidth Allocation:\n"
-for state, bandwidth in bandwidth_by_state.items():
-    report_content += f"  {state}: {bandwidth} Mbps\n"
-report_content += "\n"
-
-# Insight 6: Active vs. Inactive Bandwidth Consumption
-report_content += "Active vs. Inactive Bandwidth Consumption:\n"
-report_content += f"  Active Customers: {active_bandwidth} Mbps\n"
-report_content += f"  Inactive Customers: {inactive_bandwidth} Mbps\n"
-
-# Create and populate the PDF
-pdf = InsightsPDF()
-pdf.add_page()
-pdf.add_section("Bandwidth Insights", report_content)
-
-# Save the PDF report
-pdf_filename = "Insights.pdf"
-pdf.output(pdf_filename)
-
-print(f"PDF report generated and saved as {pdf_filename}")
+# -------------------------------
+# Main execution block
+# -------------------------------
+if __name__ == "__main__":
+    try:
+        # Define file path and sheet name for the Excel file.
+        file_path = "../data/NCC Q4 2024 (JAN - DEC) - END OF THE YEAR.xlsx"
+        sheet_name = "Corporate and Retail Clients"
+        
+        # Process the Excel tables and merge them.
+        result = process_excel_tables(file_path, sheet_name)
+        
+        # Save the merged DataFrame to CSV.
+        result.to_csv("../data/merged_clients.csv", index=False)  # Ensure it saves in the correct folder
+        print("Successfully created merged_clients.csv")
+        
+    except Exception as e:
+        print(f"Failed to process file: {str(e)}")

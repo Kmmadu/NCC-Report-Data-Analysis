@@ -272,7 +272,7 @@ Skystar Global Solutions Limited,Celebration TV Auchi,Edo,South South,INTERNET,3
 SpecsTech,Uzondu MFB Awka,Anambra,South East,INTERNET,5,Active,Corporate
 SpecsTech,EBSU MFB Abakaliki,Ebonyi,South East,INTERNET,1,Active,Corporate
 SpecsTech,CoalCamp MFB Enugu,Enugu,South East,INTERNET,2,Active,Corporate
-SpecsTech,Specstech Club Enugu,Enugu,South East,INTERNET,1,Disconnected,Corporate
+SpecsTech,Specstech Club Enugu,Enugu,South East,INTERNET,1.2,Disconnected,Corporate
 SpecTech,specstech College RD Enugu,Enugu,South East,INTERNET,5,Active,Corporate
 Specstech Club Oha,Specstech Club Oha Enugu,Enugu,South East,INTERNET,5,Active,Corporate
 SpecsTech,Specstech -Ohha MFB Aba,Abia,South East,INTERNET,2,Active,Corporate
@@ -332,7 +332,7 @@ TOFA,TOFA MFB,Kano,North West,INTERNET,5,Disconnected,Corporate
 TOFA,TOFA Lekki,Lagos,South West,INTERNET,4,Disconnected,Corporate
 Tranter-IT,Tranter-IT HQ Ilupeju,Lagos,South West,INTERNET,100,Active,Corporate
 Umenyi House,Umenyi House Awka,Anambra,South East,INTERNET,1,Active,Corporate
-Union Bank,Union Bank ATM PHCN,Abuja,North Central,WAN,1,Active,Corporate
+Union Bank,Union Bank ATM PHCN,Abuja,North Central,WAN,0.5,Active,Corporate
 Union Bank,Union Bank Ademola Abuja,Abuja,North Central,WAN,2,Active,Corporate
 Union Bank,Union Bank Maitama,Abuja,North Central,WAN,2,Active,Corporate
 Union Bank,Union Bank Deidei,Abuja,North Central,WAN,4,Active,Corporate
@@ -356,10 +356,10 @@ Union Bank,Union Bank Okpara Avenue,Enugu,South East,WAN,10,Active,Corporate
 Union Bank,UnionBank Bajoga,Gombe,North East,WAN,2,Active,Corporate
 Union Bank,UnionBank Alaba Owerri,Imo,South East,WAN,2,Active,Corporate
 Union Bank,UnionBank Okigwe,Imo,South East,WAN,4,Active,Corporate
-Union Bank,Union Bank J7,Kaduna,North West,WAN,1,Active,Corporate
+Union Bank,Union Bank J7,Kaduna,North West,WAN,0.5,Active,Corporate
 Union Bank,Union Bank Ahmadu Bello Way,Kaduna,North West,WAN,2,Active,Corporate
 Union Bank,Union Bank Kwoi Kaduna,Kaduna,North West,WAN,4,Active,Corporate
-Union Bank,Union Bank Teller Implant,Kano,North West,WAN,1,Active,Corporate
+Union Bank,Union Bank Teller Implant,Kano,North West,WAN,0.5,Active,Corporate
 Union Bank,Union Bank kurmi market,Kano,North West,WAN,2,Active,Corporate
 Union Bank,UnionBank Kantikwari,Kano,North West,WAN,4,Active,Corporate
 Union Bank,Union Bank Funtua Kastina,Kastina,North West,WAN,2,Active,Corporate
@@ -368,9 +368,9 @@ Union Bank,Union Bank Bagudo Kebbi,Kebbi,North West,WAN,2,Active,Corporate
 Union Bank,Union Bank Kabba,Kogi,North Central,WAN,2,Active,Corporate
 Union Bank,UnionBank Idah,Kogi,North Central,WAN,2,Active,Corporate
 Union Bank,UnionBank IBB Way Lokoja,Kogi,North Central,WAN,4,Active,Corporate
-Union Bank,Union Bank Surulere,Lagos,South West,WAN,1,Active,Corporate
-Union Bank,Union Bank Teller Implant Ikeja,Lagos,South West,WAN,1,Active,Corporate
-Union Bank,UnionBank Sango Ota,Lagos,South West,WAN,1,Active,Corporate
+Union Bank,Union Bank Surulere,Lagos,South West,WAN,0.5,Active,Corporate
+Union Bank,Union Bank Teller Implant Ikeja,Lagos,South West,WAN,0.5,Active,Corporate
+Union Bank,UnionBank Sango Ota,Lagos,South West,WAN,0.5,Active,Corporate
 Union Bank,Union Bank Allen,Lagos,South West,WAN,2,Active,Corporate
 Union Bank,Union Bank Badagry,Lagos,South West,WAN,2,Active,Corporate
 Union Bank,Union Bank Broadstreet,Lagos,South West,WAN,2,Active,Corporate
@@ -404,7 +404,7 @@ Union Bank,Union bank Aba Rd Ph,Rivers,South South,WAN,2,Active,Corporate
 Union Bank,Union Bank Onne NAFCON Ph,Rivers,South South,WAN,2,Active,Corporate
 Union Bank,UnionBank Kingsway Rd PH,Rivers,South South,WAN,4,Active,Corporate
 Union Bank,Union Bank Gashua,Yobe,North East,WAN,2,Disconnected,Corporate
-Union Bank ATM,Union Bank ATM Auchi,Edo,South South,WAN,1,Active,Corporate
+Union Bank ATM,Union Bank ATM Auchi,Edo,South South,WAN,0.5,Active,Corporate
 Union Bank,Union Bank Zik Avenue Enugu ,Enugu,South East,WAN,4,Active,Corporate
 Union Bank,Union Bank Hadejia ,Jigawa,North West,WAN,4,Active,Corporate
 Union Bank ,  Union Bank Lafia  ,Nassarawa,North Central,WAN,4,Active,Corporate

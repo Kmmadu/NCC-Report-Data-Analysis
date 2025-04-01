@@ -9,27 +9,37 @@ import os
 # -------------------------------------------------------------------
 @st.cache_data
 def load_data():
+    """
+    Load and preprocess the merged client dataset.
+    
+    The function builds an absolute path to the merged_clients.csv file located
+    in the data folder (at the repo root), verifies its existence, and reads it.
+    It standardizes the 'CLIENT' and 'CUSTOMER STATUS' columns for consistent filtering.
+    
+    Returns:
+        pd.DataFrame: The preprocessed DataFrame.
+    """
     try:
-        # Get current script directory
+        # Get current script directory (inside the src folder)
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # Build absolute path to data file
-        file_path = os.path.join(current_dir, 'data', 'merged_clients.csv')
+        # Build absolute path to the data file (data folder is in the repo root)
+        file_path = os.path.join(current_dir, '..', 'data', 'merged_clients.csv')
         
-        # Verify file exists before loading
+        # Verify that the data file exists
         if not os.path.exists(file_path):
             st.error(f"Data file not found at: {file_path}")
             st.stop()
             
         df = pd.read_csv(file_path)
         
-        # Standardize client types
+        # Standardize the 'CLIENT' column
         df["CLIENT"] = df["CLIENT"].replace({
             "Corporate and Retail": "Corporate",
             "Retail Clients": "Retail",
             "corporate": "Corporate"
         }).str.strip().str.title()
         
-        # Standardize customer statuses
+        # Standardize the 'CUSTOMER STATUS' column
         df["CUSTOMER STATUS"] = df["CUSTOMER STATUS"].replace({
             "Active": "Connected",
             "Inactive": "Disconnected",
@@ -45,8 +55,14 @@ def load_data():
 # PDF Path Handling
 # -------------------------------------------------------------------
 def get_pdf_path():
+    """
+    Build and return the absolute path to the PDF insights report.
+    
+    Returns:
+        str: The absolute file path to the insight.pdf file.
+    """
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(current_dir, 'data', 'insight.pdf')
+    return os.path.join(current_dir, '..', 'data', 'insight.pdf')
 
 # -------------------------------------------------------------------
 # Load Data
@@ -93,10 +109,14 @@ with st.sidebar.expander("🏢 Customer Filters", expanded=True):
 # Filtering Logic
 # -------------------------------------------------------------------
 conditions = []
-if regions: conditions.append(df["REGION"].isin(regions))
-if states: conditions.append(df["STATE"].isin(states))
-if client_types: conditions.append(df["CLIENT"].isin(client_types))
-if statuses: conditions.append(df["CUSTOMER STATUS"].isin(statuses))
+if regions: 
+    conditions.append(df["REGION"].isin(regions))
+if states: 
+    conditions.append(df["STATE"].isin(states))
+if client_types: 
+    conditions.append(df["CLIENT"].isin(client_types))
+if statuses: 
+    conditions.append(df["CUSTOMER STATUS"].isin(statuses))
 
 df_filtered = df[reduce(lambda x, y: x & y, conditions)] if conditions else df
 
@@ -110,19 +130,29 @@ if df_filtered.empty:
 st.title("NCC 2024 Customer Intelligence Dashboard")
 st.caption("Q4 Performance Metrics & Customer Insights")
 
-# Key Metrics
+# Key Metrics Grid
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("Total Bandwidth", f"{df_filtered['BANDWIDTH SUBSCRIPTION (Mbps)'].sum():,.0f} Mbps")
+    st.metric("Total Bandwidth", 
+              f"{df_filtered['BANDWIDTH SUBSCRIPTION (Mbps)'].sum():,.0f} Mbps",
+              help="Total bandwidth allocated to selected customers.")
 with col2:
-    st.metric("Active Connections", f"{df_filtered[df_filtered['CUSTOMER STATUS'] == 'Connected'].shape[0]:,}")
+    st.metric("Active Connections", 
+              f"{df_filtered[df_filtered['CUSTOMER STATUS'] == 'Connected'].shape[0]:,}",
+              help="Number of currently connected customers.")
 with col3:
-    st.metric("Enterprise Clients", f"{df_filtered[df_filtered['CLIENT'] == 'Corporate'].shape[0]:,}")
+    st.metric("Enterprise Clients", 
+              f"{df_filtered[df_filtered['CLIENT'] == 'Corporate'].shape[0]:,}",
+              help="Number of corporate customers.")
 
+# -------------------------------------------------------------------
 # Visualizations
+# -------------------------------------------------------------------
 tab1, tab2, tab3 = st.tabs(["Geographic Analysis", "Customer Segmentation", "Raw Data"])
 
+# Geographic Analysis Tab
 with tab1:
+    # Bar chart: Customer Distribution by Region
     fig1 = px.bar(
         df_filtered.groupby("REGION", as_index=False).size(),
         x="REGION", y="size",
@@ -132,6 +162,7 @@ with tab1:
     fig1.update_layout(height=400, title_x=0.5)
     st.plotly_chart(fig1, use_container_width=True)
     
+    # Bar chart: Top 10 States by Customer Count
     fig2 = px.bar(
         df_filtered.groupby("STATE", as_index=False).size().nlargest(10, "size"),
         x="size", y="STATE", orientation='h',
@@ -142,7 +173,9 @@ with tab1:
     fig2.update_layout(title_x=0.5)
     st.plotly_chart(fig2, use_container_width=True)
 
+# Customer Segmentation Tab
 with tab2:
+    # Pie chart: Customer Status Distribution
     fig3 = px.pie(
         df_filtered,
         names="CUSTOMER STATUS",
@@ -154,14 +187,16 @@ with tab2:
     fig3.update_layout(title_x=0.5)
     st.plotly_chart(fig3, use_container_width=True)
     
+    # Treemap: Bandwidth Allocation by Region & Client
     fig4 = px.treemap(
         df_filtered,
         path=["REGION", "CLIENT"],
         values="BANDWIDTH SUBSCRIPTION (Mbps)",
-        title="Bandwidth Allocation by Region & Client Type"
+        title="Bandwidth Allocation by Region & Client"
     )
     st.plotly_chart(fig4, use_container_width=True)
 
+# Raw Data Tab
 with tab3:
     st.subheader("Filtered Customer Data")
     bandwidth_max = int(df_filtered["BANDWIDTH SUBSCRIPTION (Mbps)"].max())
@@ -179,7 +214,7 @@ with tab3:
     )
 
 # -------------------------------------------------------------------
-# Data Export Section
+# Data Export Section (Sidebar)
 # -------------------------------------------------------------------
 st.sidebar.markdown("---")
 st.sidebar.subheader("Data Export")
@@ -201,7 +236,7 @@ st.sidebar.download_button(
     help="Download complete dataset as CSV"
 )
 
-# PDF Download
+# PDF Report Download
 try:
     pdf_path = get_pdf_path()
     if os.path.exists(pdf_path):

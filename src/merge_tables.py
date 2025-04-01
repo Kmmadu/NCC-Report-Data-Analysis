@@ -18,7 +18,7 @@ def clean_df(df):
 def process_excel_tables(file_path, sheet_name, header_marker="S/N"):
     """
     Process an Excel sheet containing two tables separated by a repeated header row.
-    The function extracts both tables, cleans them, assigns a Client Type, and merges them.
+    The function extracts both tables, cleans them, and merges them.
     
     Parameters:
         file_path (str): Path to the Excel file.
@@ -44,17 +44,15 @@ def process_excel_tables(file_path, sheet_name, header_marker="S/N"):
         # Extract header values from the first header row.
         header = df_all.iloc[header_rows[0]].tolist()
         
-        # Extract the first table (assumed to be Corporate Clients) 
+        # Extract the first table (formerly Corporate Clients) 
         df1 = df_all.iloc[header_rows[0] + 1 : header_rows[1]].copy()
         df1.columns = header  # Set header for the first table.
         df1 = clean_df(df1)
-        df1["Client Type"] = "Corporate"  # Label the first table as Corporate.
         
-        # Extract the second table (assumed to be Retail Clients)
+        # Extract the second table (formerly Retail Clients)
         df2 = df_all.iloc[header_rows[1] + 1 :].copy()
         df2.columns = header  # Set header for the second table.
         df2 = clean_df(df2)
-        df2["Client Type"] = "Retail"  # Label the second table as Retail.
         
         # Validate that both tables have data
         if df1.empty or df2.empty:
