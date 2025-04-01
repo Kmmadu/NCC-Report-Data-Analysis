@@ -219,7 +219,7 @@ with tab3:
 st.sidebar.markdown("---")
 st.sidebar.subheader("Data Export")
 
-# CSV Downloads (unchanged)
+# CSV Downloads
 st.sidebar.download_button(
     label="📥 Export Filtered Data",
     data=df_filtered.to_csv(index=False),
@@ -236,28 +236,32 @@ st.sidebar.download_button(
     help="Download complete dataset as CSV"
 )
 
-# PDF Report Download - Corrected version
+# PDF Report Download - Corrected Path Handling
+def get_pdf_path():
+    """Returns the absolute path of the PDF file."""
+    base_dir = os.getcwd()  # Gets current working directory
+    pdf_path = os.path.join(base_dir, "data", "insight.pdf")
+    return pdf_path
+
 try:
-    # Get path relative to repository root
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    pdf_path = os.path.join(base_dir, 'data', 'insight.pdf')
-    
+    pdf_path = get_pdf_path()
+
     # Debugging information
     st.sidebar.markdown(f"**Expected PDF path:**  \n`{pdf_path}`")
-    
-    if os.path.exists(pdf_path):
+
+    if os.path.exists(pdf_path):  # Checks if file exists
         with open(pdf_path, "rb") as pdf_file:
             st.sidebar.download_button(
                 label="📄 Download Insights Report",
-                data=pdf_file,
+                data=pdf_file.read(),
                 file_name="ncc_insights_report.pdf",
                 mime="application/pdf",
                 help="Download comprehensive insights report (PDF)"
             )
     else:
         st.sidebar.error(f"⚠️ PDF report not found at: {pdf_path}")
-        st.sidebar.markdown("**Required file structure:**")
-        st.sidebar.code()
-        
+        st.sidebar.markdown("**Ensure the file exists in:**")
+        st.sidebar.code("data/insight.pdf")
+
 except Exception as e:
     st.sidebar.error(f"❌ Error loading PDF: {str(e)}")
