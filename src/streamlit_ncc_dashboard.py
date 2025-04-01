@@ -237,26 +237,30 @@ st.sidebar.download_button(
 )
 
 # PDF Report Download - Enhanced version
+from pathlib import Path
+
+def get_pdf_path():
+    return Path(__file__).parent / "data" / "insight.pdf"
+
 try:
     pdf_path = get_pdf_path()
     
     # Debugging information
     st.sidebar.markdown(f"**Expected PDF path:**  \n`{pdf_path}`")
     
-    if os.path.exists(pdf_path):
+    if pdf_path.exists():
         with open(pdf_path, "rb") as pdf_file:
             st.sidebar.download_button(
                 label="📄 Download Insights Report",
-                data=pdf_file,
+                data=pdf_file.read(),  # Read file content
                 file_name="ncc_insights_report.pdf",
                 mime="application/pdf",
                 help="Download comprehensive insights report (PDF)"
             )
     else:
-        st.sidebar.error(f"PDF report not found at: {pdf_path}")
+        st.sidebar.error(f"⚠️ PDF report not found at: {pdf_path}")
         st.sidebar.markdown("**Required file structure:**")
-        st.sidebar.code()
+        st.sidebar.code("/data/insight.pdf")
         
 except Exception as e:
-    st.sidebar.error(f"Error loading PDF: {str(e)}")
-    st.sidebar.markdown()
+    st.sidebar.error(f"❌ Error loading PDF: {str(e)}")
